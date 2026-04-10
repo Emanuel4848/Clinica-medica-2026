@@ -1,19 +1,17 @@
-
 * {
   margin: 0;
   padding: 0;
   box-sizing: border-box;
 }
 
-
 body {
   font-family: Arial, sans-serif;
   background: #f0f2f5;
+  color: #333;
 }
 
-
 .container {
-  max-width: 900px;
+  max-width: 1000px;
   margin: 40px auto;
   background: #ffffff;
   padding: 25px;
@@ -21,6 +19,15 @@ body {
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
 }
 
+.container-login {
+  max-width: 400px;
+  margin: 80px auto;
+  background: white;
+  padding: 30px;
+  border-radius: 10px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+  text-align: center;
+}
 
 h1 {
   margin-bottom: 10px;
@@ -33,12 +40,11 @@ h2 {
   color: #444;
 }
 
-
 p {
   margin-bottom: 15px;
   color: #555;
+  font-size: 14px;
 }
-
 
 .form {
   display: grid;
@@ -46,37 +52,37 @@ p {
   margin-bottom: 20px;
 }
 
-
-input {
+input,
+select,
+button {
   padding: 10px;
-  border: 1px solid #ccc;
-  border-radius: 6px;
   font-size: 14px;
+  border-radius: 6px;
 }
 
+input,
+select {
+  border: 1px solid #ccc;
+  background: white;
+}
 
-input:focus {
+input:focus,
+select:focus {
   border-color: #4caf50;
   outline: none;
 }
 
-
 button {
-  padding: 10px;
   border: none;
-  border-radius: 6px;
   background-color: #4caf50;
   color: white;
-  font-size: 14px;
   cursor: pointer;
   transition: 0.2s;
 }
 
-
 button:hover {
   background-color: #43a047;
 }
-
 
 button[type="button"] {
   background-color: #f44336;
@@ -86,48 +92,69 @@ button[type="button"]:hover {
   background-color: #d32f2f;
 }
 
-
 table {
   width: 100%;
   border-collapse: collapse;
   margin-top: 10px;
+  background: white;
 }
-
 
 th {
   background-color: #4caf50;
   color: white;
   padding: 10px;
+  text-align: left;
 }
-
 
 td {
   padding: 10px;
   border: 1px solid #ddd;
+  text-align: left;
 }
-
 
 tr:nth-child(even) {
   background-color: #f9f9f9;
 }
 
-
 tr:hover {
   background-color: #f1f1f1;
 }
 
-
-p {
-  font-size: 14px;
+button {
+  margin-right: 10px;
 }
 
 
-.container-login {
-  max-width: 400px;
-  margin: 80px auto;
-  background: white;
-  padding: 30px;
-  border-radius: 10px;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
-  text-align: center;
+td button {
+  padding: 6px 10px;
+  font-size: 12px;
+  border-radius: 5px;
+  margin-right: 5px;
+}
+
+
+.btn-atender {
+  background-color: #2196f3;
+}
+
+.btn-atender:hover {
+  background-color: #1976d2;
+}
+
+
+.btn-edit {
+  background-color: #ff9800;
+}
+
+.btn-edit:hover {
+  background-color: #f57c00;
+}
+
+
+.btn-cancel {
+  background-color: #f44336;
+}
+
+.btn-cancel:hover {
+  background-color: #d32f2f;
 }

@@ -3,6 +3,8 @@ import cors from "cors";
 import { pool } from "./config/db";
 import authRoutes from "./routes/auth.routes";
 import pacienteRoutes from "./routes/paciente.routes";
+import doctorRoutes from "./routes/doctor.routes";
+import citaRoutes from "./routes/cita.routes";
 
 const app = express();
 
@@ -31,6 +33,8 @@ app.get("/test-db", async (_req, res) => {
 app.use("/api/auth", authRoutes);
 app.use("/api/pacientes", pacienteRoutes);
 
+app.use("/api/doctores", doctorRoutes);
+app.use("/api/citas", citaRoutes);
 
 
 

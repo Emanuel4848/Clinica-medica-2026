@@ -32,6 +32,56 @@ INSERT INTO rol (nombre_rol) VALUES
 ('Doctor');
 
 
-//ususario temporal sin hash
+
 INSERT INTO usuario (username, password, estado, id_rol)
 VALUES ('admin', '123456', 'activo', 1);
+
+
+CREATE TABLE doctor (
+    id_doctor SERIAL PRIMARY KEY,
+    nombre VARCHAR(100) NOT NULL,
+    apellido VARCHAR(100) NOT NULL,
+    especialidad VARCHAR(100) NOT NULL,
+    telefono VARCHAR(20) NOT NULL,
+    estado VARCHAR(20) NOT NULL DEFAULT 'activo',
+    id_usuario INT UNIQUE,
+    CONSTRAINT fk_doctor_usuario
+        FOREIGN KEY (id_usuario)
+        REFERENCES usuario(id_usuario)
+        ON UPDATE CASCADE
+        ON DELETE SET NULL
+);
+
+CREATE TABLE cita (
+    id_cita SERIAL PRIMARY KEY,
+    fecha DATE NOT NULL,
+    hora TIME NOT NULL,
+    estado VARCHAR(20) NOT NULL DEFAULT 'programada',
+    id_paciente INT NOT NULL,
+    id_doctor INT NOT NULL,
+    CONSTRAINT fk_cita_paciente
+        FOREIGN KEY (id_paciente)
+        REFERENCES paciente(id_paciente)
+        ON UPDATE CASCADE
+        ON DELETE RESTRICT,
+    CONSTRAINT fk_cita_doctor
+        FOREIGN KEY (id_doctor)
+        REFERENCES doctor(id_doctor)
+        ON UPDATE CASCADE
+        ON DELETE RESTRICT
+);
+
+
+ALTER TABLE cita
+ADD CONSTRAINT unique_cita_doctor_fecha_hora
+UNIQUE (id_doctor, fecha, hora);
+
+
+INSERT INTO usuario (username, password, estado, id_rol)
+VALUES 
+('recep1', '123456', 'activo', 2),
+('doctor1', '123456', 'activo', 3);
+
+
+INSERT INTO doctor (nombre, apellido, especialidad, telefono, estado, id_usuario)
+VALUES ('Carlos', 'López', 'Medicina General', '55556666', 'activo', 3);

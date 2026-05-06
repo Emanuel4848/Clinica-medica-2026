@@ -85,3 +85,36 @@ VALUES
 
 INSERT INTO doctor (nombre, apellido, especialidad, telefono, estado, id_usuario)
 VALUES ('Carlos', 'López', 'Medicina General', '55556666', 'activo', 3);
+
+
+//entregable final
+
+CREATE TABLE historial_clinico (
+    id_historial SERIAL PRIMARY KEY,
+    fecha DATE NOT NULL,
+    motivo_consulta VARCHAR(150) NOT NULL,
+    observaciones TEXT,
+    tratamiento TEXT,
+    id_paciente INT NOT NULL,
+    id_doctor INT NOT NULL,
+
+    CONSTRAINT fk_historial_paciente
+        FOREIGN KEY (id_paciente)
+        REFERENCES paciente(id_paciente),
+
+    CONSTRAINT fk_historial_doctor
+        FOREIGN KEY (id_doctor)
+        REFERENCES doctor(id_doctor)
+);
+
+
+CREATE TABLE receta (
+    id_receta SERIAL PRIMARY KEY,
+    medicamento VARCHAR(150) NOT NULL,
+    indicaciones TEXT NOT NULL,
+    id_historial INT NOT NULL,
+
+    CONSTRAINT fk_receta_historial
+        FOREIGN KEY (id_historial)
+        REFERENCES historial_clinico(id_historial)
+);

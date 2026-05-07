@@ -118,3 +118,29 @@ CREATE TABLE receta (
         FOREIGN KEY (id_historial)
         REFERENCES historial_clinico(id_historial)
 );
+
+DROP TABLE receta;
+select * from usuario
+
+
+ALTER TABLE historial_clinico
+ADD COLUMN proxima_cita DATE;
+
+
+
+CREATE TABLE pago (
+    id_pago SERIAL PRIMARY KEY,
+    monto DECIMAL(10,2) NOT NULL,
+    fecha_pago DATE NOT NULL,
+    estado_pago VARCHAR(20) NOT NULL DEFAULT 'pendiente',
+    id_cita INT NOT NULL UNIQUE,
+
+    CONSTRAINT fk_pago_cita
+        FOREIGN KEY (id_cita)
+        REFERENCES cita(id_cita)
+        ON UPDATE CASCADE
+        ON DELETE RESTRICT
+);
+
+ALTER TABLE pago
+DROP COLUMN fecha_pago;

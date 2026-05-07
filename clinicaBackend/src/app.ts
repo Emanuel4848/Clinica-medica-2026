@@ -6,7 +6,8 @@ import pacienteRoutes from "./routes/paciente.routes";
 import doctorRoutes from "./routes/doctor.routes";
 import citaRoutes from "./routes/cita.routes";
 import historialRoutes from "./routes/historial.routes";
-
+import pagoRoutes from "./routes/pago.routes";
+import reporteRoutes from "./routes/reporte.routes";
 
 
 const app = express();
@@ -41,6 +42,9 @@ app.use("/api/citas", citaRoutes);
 
 app.use("/api/historial", historialRoutes);
 
+app.use("/api/pagos", pagoRoutes);
 
+
+app.use("/api/reportes", reporteRoutes);
 
 export default app;

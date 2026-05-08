@@ -1,5 +1,8 @@
 import { useEffect, useState } from "react";
 import api from "../services/api";
+import PageHeader from "../components/PageHeader";
+import Panel from "../components/Panel";
+import Card from "../components/Card";
 
 type Doctor = {
   id_doctor: number;
@@ -46,6 +49,7 @@ export default function DoctoresPage({ user }: any) {
 
     try {
       const res = await api.post("/doctores", form);
+
       setMensaje(res.data.message);
 
       setForm({
@@ -84,92 +88,142 @@ export default function DoctoresPage({ user }: any) {
   };
 
   return (
-    <div className="container">
-      <h1>Gestión de Doctores</h1>
-      <p>
-        Usuario: <strong>{user.username}</strong> | Rol:{" "}
-        <strong>{user.rol}</strong>
-      </p>
+    <>
+      <PageHeader
+        title="Gestión de doctores"
+        subtitle={`Usuario: ${user.username} | Rol: ${user.rol}`}
+      />
 
-      <form onSubmit={handleRegistrar} className="form">
-        <input
-          name="username"
-          placeholder="Username del doctor"
-          value={form.username}
-          onChange={handleChange}
-        />
-        <input
-          name="password"
-          type="password"
-          placeholder="Password del doctor"
-          value={form.password}
-          onChange={handleChange}
-        />
-        <input
-          name="nombre"
-          placeholder="Nombre"
-          value={form.nombre}
-          onChange={handleChange}
-        />
-        <input
-          name="apellido"
-          placeholder="Apellido"
-          value={form.apellido}
-          onChange={handleChange}
-        />
-        <input
-          name="especialidad"
-          placeholder="Especialidad"
-          value={form.especialidad}
-          onChange={handleChange}
-        />
-        <input
-          name="telefono"
-          placeholder="Teléfono"
-          value={form.telefono}
-          onChange={handleChange}
-        />
-        <button type="submit">Registrar doctor</button>
-      </form>
+      {mensaje && <div className="alert-soft">{mensaje}</div>}
 
-      {mensaje && <p>{mensaje}</p>}
+      <div className="cards-grid">
+        <Card title="Total doctores" value={doctores.length} />
 
-      <table>
-        <thead>
-          <tr>
-            <th>ID</th>
-            <th>Usuario</th>
-            <th>Nombre</th>
-            <th>Especialidad</th>
-            <th>Estado</th>
-            <th>Acciones</th>
-          </tr>
-        </thead>
-        <tbody>
-          {doctores.map((d) => (
-            <tr key={d.id_doctor}>
-              <td>{d.id_doctor}</td>
-              <td>{d.username || "Sin usuario"}</td>
-              <td>
-                {d.nombre} {d.apellido}
-              </td>
-              <td>{d.especialidad}</td>
-              <td>{d.estado}</td>
-              <td>
-                {d.estado === "activo" ? (
-                  <button onClick={() => desactivar(d.id_doctor)}>
-                    Desactivar
-                  </button>
-                ) : (
-                  <button onClick={() => activar(d.id_doctor)}>
-                    Activar
-                  </button>
-                )}
-              </td>
-            </tr>
-          ))}
-        </tbody>
-      </table>
-    </div>
+        <Card
+          title="Doctores activos"
+          value={doctores.filter((d) => d.estado === "activo").length}
+        />
+
+        <Card
+          title="Doctores inactivos"
+          value={doctores.filter((d) => d.estado === "inactivo").length}
+        />
+      </div>
+
+      <Panel title="Registrar doctor">
+        <form onSubmit={handleRegistrar} className="modern-form">
+          <div className="form-grid">
+            <input
+              name="username"
+              placeholder="Usuario"
+              value={form.username}
+              onChange={handleChange}
+            />
+
+            <input
+              name="password"
+              type="password"
+              placeholder="Contraseña"
+              value={form.password}
+              onChange={handleChange}
+            />
+
+            <input
+              name="nombre"
+              placeholder="Nombre"
+              value={form.nombre}
+              onChange={handleChange}
+            />
+
+            <input
+              name="apellido"
+              placeholder="Apellido"
+              value={form.apellido}
+              onChange={handleChange}
+            />
+
+            <input
+              name="especialidad"
+              placeholder="Especialidad"
+              value={form.especialidad}
+              onChange={handleChange}
+            />
+
+            <input
+              name="telefono"
+              placeholder="Teléfono"
+              value={form.telefono}
+              onChange={handleChange}
+            />
+          </div>
+
+          <div className="actions-row">
+            <button className="btn-primary" type="submit">
+              Registrar doctor
+            </button>
+          </div>
+        </form>
+      </Panel>
+
+      <Panel title="Lista de doctores">
+        <div className="table-wrapper">
+          <table>
+            <thead>
+              <tr>
+                <th>Usuario</th>
+                <th>Doctor</th>
+                <th>Especialidad</th>
+                <th>Estado</th>
+                <th>Acciones</th>
+              </tr>
+            </thead>
+
+            <tbody>
+              {doctores.map((d) => (
+                <tr key={d.id_doctor}>
+                  <td>{d.username || "Sin usuario"}</td>
+
+                  <td>
+                    {d.nombre} {d.apellido}
+                  </td>
+
+                  <td>{d.especialidad}</td>
+
+                  <td>
+                    <span
+                      className={`status-pill ${
+                        d.estado === "activo"
+                          ? "status-atendida"
+                          : "status-cancelada"
+                      }`}
+                    >
+                      {d.estado}
+                    </span>
+                  </td>
+
+                  <td>
+                    {d.estado === "activo" ? (
+                      <button
+                        className="btn-table danger"
+                        onClick={() => desactivar(d.id_doctor)}
+                      >
+                        Desactivar
+                      </button>
+                    ) : (
+                      <button
+                        className="btn-table"
+                        onClick={() => activar(d.id_doctor)}
+                      >
+                        Activar
+                      </button>
+                    )}
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      </Panel>
+    </>
   );
 }

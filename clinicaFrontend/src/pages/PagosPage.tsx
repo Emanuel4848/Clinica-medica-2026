@@ -1,5 +1,7 @@
 import { useEffect, useState } from "react";
 import api from "../services/api";
+import PageHeader from "../components/PageHeader";
+import Panel from "../components/Panel";
 
 type Cita = {
   id_cita: number;
@@ -95,74 +97,85 @@ export default function PagosPage({ user }: any) {
   };
 
   return (
-    <div className="container">
-      <h1>Gestión de Pagos</h1>
-      <p>
-        Usuario: <strong>{user.username}</strong> | Rol:{" "}
-        <strong>{user.rol}</strong>
-      </p>
+    <>
+      <PageHeader
+        title="Pagos"
+        subtitle={`Usuario: ${user.username} | Rol: ${user.rol}`}
+      />
 
-      {mensaje && <p>{mensaje}</p>}
+      {mensaje && <div className="alert-soft">{mensaje}</div>}
 
-      <h2>Registrar pago</h2>
+      <Panel title="Registrar pago">
+        <form onSubmit={registrarPago} className="modern-form">
+          <div className="form-grid">
+            <select
+              name="id_cita"
+              value={formData.id_cita}
+              onChange={handleChange}
+            >
+              <option value="">Seleccione una cita</option>
+              {citas.map((cita) => (
+                <option key={cita.id_cita} value={cita.id_cita}>
+                  Cita #{cita.id_cita} - {cita.paciente_nombre}{" "}
+                  {cita.paciente_apellido} - {cita.fecha.split("T")[0]}{" "}
+                  {cita.hora}
+                </option>
+              ))}
+            </select>
 
-      <form onSubmit={registrarPago} className="form">
-        <select
-          name="id_cita"
-          value={formData.id_cita}
-          onChange={handleChange}
-        >
-          <option value="">Seleccione una cita</option>
-          {citas.map((cita) => (
-            <option key={cita.id_cita} value={cita.id_cita}>
-              Cita #{cita.id_cita} - {cita.paciente_nombre}{" "}
-              {cita.paciente_apellido} - {cita.fecha.split("T")[0]} {cita.hora}
-            </option>
-          ))}
-        </select>
+            <input
+              type="number"
+              step="0.01"
+              name="monto"
+              placeholder="Monto"
+              value={formData.monto}
+              onChange={handleChange}
+            />
+          </div>
 
-        <input
-          type="number"
-          step="0.01"
-          name="monto"
-          placeholder="Monto"
-          value={formData.monto}
-          onChange={handleChange}
-        />
+          <div className="actions-row">
+            <button className="btn-primary" type="submit">
+              Registrar pago
+            </button>
+          </div>
+        </form>
+      </Panel>
 
-        <button type="submit">Registrar pago</button>
-      </form>
+      <Panel title="Pagos registrados">
+        <div className="table-wrapper">
+          <table>
+            <thead>
+              <tr>
+                <th>Cita</th>
+                <th>Paciente</th>
+                <th>Doctor</th>
+                <th>Monto</th>
+                <th>Estado</th>
+              </tr>
+            </thead>
 
-      <h2>Pagos registrados</h2>
-
-      <table>
-        <thead>
-          <tr>
-            <th>ID Pago</th>
-            <th>Cita</th>
-            <th>Paciente</th>
-            <th>Doctor</th>
-            <th>Monto</th>
-            <th>Estado</th>
-          </tr>
-        </thead>
-        <tbody>
-          {pagos.map((pago) => (
-            <tr key={pago.id_pago}>
-              <td>{pago.id_pago}</td>
-              <td>#{pago.id_cita}</td>
-              <td>
-                {pago.paciente_nombre} {pago.paciente_apellido}
-              </td>
-              <td>
-                {pago.doctor_nombre} {pago.doctor_apellido}
-              </td>
-              <td>Q{Number(pago.monto).toFixed(2)}</td>
-              <td>{pago.estado_pago}</td>
-            </tr>
-          ))}
-        </tbody>
-      </table>
-    </div>
+            <tbody>
+              {pagos.map((pago) => (
+                <tr key={pago.id_pago}>
+                  <td>Cita #{pago.id_cita}</td>
+                  <td>
+                    {pago.paciente_nombre} {pago.paciente_apellido}
+                  </td>
+                  <td>
+                    {pago.doctor_nombre} {pago.doctor_apellido}
+                  </td>
+                  <td>Q{Number(pago.monto).toFixed(2)}</td>
+                  <td>
+                    <span className="status-pill status-atendida">
+                      {pago.estado_pago}
+                    </span>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      </Panel>
+    </>
   );
 }

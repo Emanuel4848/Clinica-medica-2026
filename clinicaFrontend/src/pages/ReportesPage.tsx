@@ -1,5 +1,8 @@
 import { useEffect, useState } from "react";
 import api from "../services/api";
+import PageHeader from "../components/PageHeader";
+import Panel from "../components/Panel";
+import Card from "../components/Card";
 
 type CitaEstado = {
   estado: string;
@@ -56,96 +59,103 @@ export default function ReportesPage({ user }: any) {
   }, []);
 
   return (
-    <div className="container">
-      <h1>Reportes del Sistema</h1>
-      <p>
-        Usuario: <strong>{user.username}</strong> | Rol:{" "}
-        <strong>{user.rol}</strong>
-      </p>
+    <>
+      <PageHeader
+        title="Reportes"
+        subtitle={`Usuario: ${user.username} | Rol: ${user.rol}`}
+      />
 
-      {mensaje && <p>{mensaje}</p>}
+      {mensaje && <div className="alert-soft">{mensaje}</div>}
 
-      <h2>Resumen de pagos</h2>
-      <table>
-        <thead>
-          <tr>
-            <th>Total de pagos</th>
-            <th>Total de ingresos</th>
-          </tr>
-        </thead>
-        <tbody>
-          <tr>
-            <td>{pagos?.total_pagos || 0}</td>
-            <td>Q{Number(pagos?.total_ingresos || 0).toFixed(2)}</td>
-          </tr>
-        </tbody>
-      </table>
+      <div className="cards-grid">
+        <Card title="Total de pagos" value={pagos?.total_pagos || 0} />
+        <Card
+          title="Ingresos registrados"
+          value={`Q${Number(pagos?.total_ingresos || 0).toFixed(2)}`}
+        />
+        <Card title="Próximas citas" value={proximasCitas.length} />
+      </div>
 
-      <h2>Citas por estado</h2>
-      <table>
-        <thead>
-          <tr>
-            <th>Estado</th>
-            <th>Total</th>
-          </tr>
-        </thead>
-        <tbody>
-          {citasEstado.map((item) => (
-            <tr key={item.estado}>
-              <td>{item.estado}</td>
-              <td>{item.total}</td>
-            </tr>
-          ))}
-        </tbody>
-      </table>
+      <div className="content-grid">
+        <Panel title="Citas por estado">
+          <div className="table-wrapper">
+            <table>
+              <thead>
+                <tr>
+                  <th>Estado</th>
+                  <th>Total</th>
+                </tr>
+              </thead>
+              <tbody>
+                {citasEstado.map((item) => (
+                  <tr key={item.estado}>
+                    <td>
+                      <span className={`status-pill status-${item.estado}`}>
+                        {item.estado}
+                      </span>
+                    </td>
+                    <td>{item.total}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </Panel>
 
-      <h2>Citas por doctor</h2>
-      <table>
-        <thead>
-          <tr>
-            <th>Doctor</th>
-            <th>Especialidad</th>
-            <th>Total citas</th>
-          </tr>
-        </thead>
-        <tbody>
-          {citasDoctor.map((item, index) => (
-            <tr key={index}>
-              <td>
-                {item.nombre} {item.apellido}
-              </td>
-              <td>{item.especialidad}</td>
-              <td>{item.total_citas}</td>
-            </tr>
-          ))}
-        </tbody>
-      </table>
+        <Panel title="Citas por doctor">
+          <div className="table-wrapper">
+            <table>
+              <thead>
+                <tr>
+                  <th>Doctor</th>
+                  <th>Especialidad</th>
+                  <th>Total</th>
+                </tr>
+              </thead>
+              <tbody>
+                {citasDoctor.map((item, index) => (
+                  <tr key={index}>
+                    <td>
+                      {item.nombre} {item.apellido}
+                    </td>
+                    <td>{item.especialidad}</td>
+                    <td>{item.total_citas}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </Panel>
+      </div>
 
-      <h2>Próximas citas sugeridas</h2>
-      <table>
-        <thead>
-          <tr>
-            <th>Fecha sugerida</th>
-            <th>Paciente</th>
-            <th>Doctor</th>
-            <th>Motivo</th>
-          </tr>
-        </thead>
-        <tbody>
-          {proximasCitas.map((item) => (
-            <tr key={item.id_historial}>
-              <td>{item.proxima_cita.split("T")[0]}</td>
-              <td>
-                {item.paciente_nombre} {item.paciente_apellido}
-              </td>
-              <td>
-                {item.doctor_nombre} {item.doctor_apellido}
-              </td>
-              <td>{item.motivo_consulta}</td>
-            </tr>
-          ))}
-        </tbody>
-      </table>
-    </div>
+      <Panel title="Próximas citas sugeridas">
+        <div className="table-wrapper">
+          <table>
+            <thead>
+              <tr>
+                <th>Fecha sugerida</th>
+                <th>Paciente</th>
+                <th>Doctor</th>
+                <th>Motivo</th>
+              </tr>
+            </thead>
+            <tbody>
+              {proximasCitas.map((item) => (
+                <tr key={item.id_historial}>
+                  <td>{item.proxima_cita.split("T")[0]}</td>
+                  <td>
+                    {item.paciente_nombre} {item.paciente_apellido}
+                  </td>
+                  <td>
+                    {item.doctor_nombre} {item.doctor_apellido}
+                  </td>
+                  <td>{item.motivo_consulta}</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      </Panel>
+    </>
   );
 }

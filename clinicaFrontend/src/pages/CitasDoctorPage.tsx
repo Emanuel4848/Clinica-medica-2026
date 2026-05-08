@@ -1,5 +1,7 @@
 import { useEffect, useState } from "react";
 import api from "../services/api";
+import PageHeader from "../components/PageHeader";
+import Panel from "../components/Panel";
 
 type Cita = {
   id_cita: number;
@@ -19,8 +21,6 @@ type Historial = {
   observaciones: string;
   receta: string;
   proxima_cita: string | null;
-  paciente_nombre: string;
-  paciente_apellido: string;
   doctor_nombre: string;
   doctor_apellido: string;
 };
@@ -29,11 +29,10 @@ export default function CitasDoctorPage({ user }: any) {
   const [citas, setCitas] = useState<Cita[]>([]);
   const [historial, setHistorial] = useState<Historial[]>([]);
   const [mensaje, setMensaje] = useState("");
-
-  const [idPacienteSeleccionado, setIdPacienteSeleccionado] = useState("");
+  const [idCitaSeleccionada, setIdCitaSeleccionada] = useState("");
+  const [busquedaHistorial, setBusquedaHistorial] = useState("");
 
   const [formData, setFormData] = useState({
-    fecha: "",
     motivo_consulta: "",
     observaciones: "",
     receta: "",
@@ -49,9 +48,7 @@ export default function CitasDoctorPage({ user }: any) {
     }
   };
 
-  const cargarHistorial = async (idPaciente: string) => {
-    if (!idPaciente) return;
-
+  const cargarHistorial = async (idPaciente: number) => {
     try {
       const res = await api.get(`/historial/paciente/${idPaciente}`);
       setHistorial(res.data);
@@ -64,15 +61,13 @@ export default function CitasDoctorPage({ user }: any) {
     cargarCitas();
   }, []);
 
-  const pacientesUnicos = citas.filter(
-    (cita, index, self) =>
-      index === self.findIndex((c) => c.id_paciente === cita.id_paciente)
+  const citaSeleccionada = citas.find(
+    (cita) => cita.id_cita === Number(idCitaSeleccionada)
   );
 
-  const handlePacienteChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
-    const idPaciente = e.target.value;
-    setIdPacienteSeleccionado(idPaciente);
-    cargarHistorial(idPaciente);
+  const seleccionarCita = (cita: Cita) => {
+    setIdCitaSeleccionada(String(cita.id_cita));
+    cargarHistorial(cita.id_paciente);
   };
 
   const handleChange = (
@@ -84,16 +79,20 @@ export default function CitasDoctorPage({ user }: any) {
     });
   };
 
-  const obtenerIdDoctorDesdeCitas = () => {
-    const primeraCita = citas[0];
-    return primeraCita?.id_doctor;
+  const limpiarFormulario = () => {
+    setFormData({
+      motivo_consulta: "",
+      observaciones: "",
+      receta: "",
+      proxima_cita: "",
+    });
   };
 
   const registrarDetalleAtencion = async (e: React.FormEvent) => {
     e.preventDefault();
 
-    if (!formData.fecha) {
-      setMensaje("Seleccione una fecha de atención");
+    if (!citaSeleccionada) {
+      setMensaje("Seleccione una cita");
       return;
     }
 
@@ -104,152 +103,184 @@ export default function CitasDoctorPage({ user }: any) {
 
     try {
       const res = await api.post("/historial", {
-        fecha: formData.fecha,
+        fecha: citaSeleccionada.fecha.split("T")[0],
         motivo_consulta: formData.motivo_consulta,
         observaciones: formData.observaciones,
         receta: formData.receta,
         proxima_cita: formData.proxima_cita || null,
-        id_paciente: Number(idPacienteSeleccionado),
-        id_doctor: obtenerIdDoctorDesdeCitas(),
+        id_paciente: citaSeleccionada.id_paciente,
+        id_doctor: citaSeleccionada.id_doctor,
       });
 
       setMensaje(res.data.message);
-
-      setFormData({
-        fecha: "",
-        motivo_consulta: "",
-        observaciones: "",
-        receta: "",
-        proxima_cita: "",
-      });
-
-      cargarHistorial(idPacienteSeleccionado);
+      limpiarFormulario();
+      cargarHistorial(citaSeleccionada.id_paciente);
     } catch (error: any) {
       setMensaje(error.response?.data?.message || "Error al registrar detalle");
     }
   };
 
+  const historialFiltrado = historial.filter((h) => {
+    const texto = `${h.fecha} ${h.motivo_consulta} ${h.observaciones} ${h.receta} ${h.doctor_nombre} ${h.doctor_apellido}`.toLowerCase();
+    return texto.includes(busquedaHistorial.toLowerCase());
+  });
+
   return (
-    <div className="container">
-      <h1>Panel del Doctor</h1>
-      <p>
-        Doctor: <strong>{user.username}</strong>
-      </p>
+    <>
+      <PageHeader
+        title="Panel del doctor"
+        subtitle={`Bienvenido, ${user.username}`}
+      />
 
-      {mensaje && <p>{mensaje}</p>}
+      {mensaje && <div className="alert-soft">{mensaje}</div>}
 
-      <h2>Mis citas asignadas</h2>
-      <table>
-        <thead>
-          <tr>
-            <th>ID</th>
-            <th>Fecha</th>
-            <th>Hora</th>
-            <th>Paciente</th>
-            <th>Estado</th>
-          </tr>
-        </thead>
-        <tbody>
-          {citas.map((cita) => (
-            <tr key={cita.id_cita}>
-              <td>{cita.id_cita}</td>
-              <td>{cita.fecha.split("T")[0]}</td>
-              <td>{cita.hora}</td>
-              <td>
-                {cita.paciente_nombre} {cita.paciente_apellido}
-              </td>
-              <td>{cita.estado}</td>
-            </tr>
-          ))}
-        </tbody>
-      </table>
+      <div className="doctor-dashboard">
+        <section className="doctor-left">
+          <Panel title="Citas asignadas">
+            <div className="doctor-cards">
+              {citas.map((cita) => (
+                <button
+                  key={cita.id_cita}
+                  type="button"
+                  className={
+                    idCitaSeleccionada === String(cita.id_cita)
+                      ? "appointment-card selected"
+                      : "appointment-card"
+                  }
+                  onClick={() => seleccionarCita(cita)}
+                >
+                  <div className="appointment-top">
+                    <span>Cita #{cita.id_cita}</span>
+                    <span className={`status-pill status-${cita.estado}`}>
+                      {cita.estado}
+                    </span>
+                  </div>
 
-      <h2>Registrar detalles de la atención</h2>
+                  <h3>
+                    {cita.paciente_nombre} {cita.paciente_apellido}
+                  </h3>
 
-      <select value={idPacienteSeleccionado} onChange={handlePacienteChange}>
-        <option value="">Seleccione un paciente</option>
-        {pacientesUnicos.map((cita) => (
-          <option key={cita.id_paciente} value={cita.id_paciente}>
-            {cita.paciente_nombre} {cita.paciente_apellido}
-          </option>
-        ))}
-      </select>
-
-      {idPacienteSeleccionado && (
-        <>
-          <form onSubmit={registrarDetalleAtencion} className="form">
-            <input
-              type="date"
-              name="fecha"
-              value={formData.fecha}
-              onChange={handleChange}
-            />
-
-            <input
-              type="text"
-              name="motivo_consulta"
-              placeholder="Motivo de consulta"
-              value={formData.motivo_consulta}
-              onChange={handleChange}
-            />
-
-            <textarea
-              name="observaciones"
-              placeholder="Observaciones"
-              value={formData.observaciones}
-              onChange={handleChange}
-            />
-
-            <textarea
-              name="receta"
-              placeholder="Receta / indicaciones"
-              value={formData.receta}
-              onChange={handleChange}
-            />
-
-            <input
-              type="date"
-              name="proxima_cita"
-              value={formData.proxima_cita}
-              onChange={handleChange}
-            />
-
-            <button type="submit">Guardar atención</button>
-          </form>
-
-          <h2>Historial del paciente</h2>
-          <table>
-            <thead>
-              <tr>
-                <th>ID</th>
-                <th>Fecha</th>
-                <th>Motivo</th>
-                <th>Observaciones</th>
-                <th>Receta</th>
-                <th>Próxima cita</th>
-                <th>Doctor</th>
-              </tr>
-            </thead>
-            <tbody>
-              {historial.map((h) => (
-                <tr key={h.id_historial}>
-                  <td>{h.id_historial}</td>
-                  <td>{h.fecha.split("T")[0]}</td>
-                  <td>{h.motivo_consulta}</td>
-                  <td>{h.observaciones}</td>
-                  <td>{h.receta}</td>
-                  <td>
-                    {h.proxima_cita ? h.proxima_cita.split("T")[0] : "No asignada"}
-                  </td>
-                  <td>
-                    {h.doctor_nombre} {h.doctor_apellido}
-                  </td>
-                </tr>
+                  <p>{cita.fecha.split("T")[0]} · {cita.hora}</p>
+                </button>
               ))}
-            </tbody>
-          </table>
-        </>
-      )}
-    </div>
+            </div>
+          </Panel>
+
+          {citaSeleccionada && (
+            <Panel title="Historial del paciente">
+              <div className="modern-form" style={{ marginBottom: "16px" }}>
+                <input
+                  type="text"
+                  placeholder="Buscar por motivo, receta u observaciones"
+                  value={busquedaHistorial}
+                  onChange={(e) => setBusquedaHistorial(e.target.value)}
+                />
+              </div>
+
+              <div className="timeline-list">
+                {historialFiltrado.map((h) => (
+                  <div className="timeline-item" key={h.id_historial}>
+                    <div className="timeline-date">
+                      {h.fecha.split("T")[0]}
+                    </div>
+
+                    <div className="timeline-content">
+                      <h3>{h.motivo_consulta}</h3>
+                      <p>
+                        <strong>Observaciones:</strong> {h.observaciones}
+                      </p>
+                      <p>
+                        <strong>Receta:</strong> {h.receta}
+                      </p>
+                      <p>
+                        <strong>Próxima cita:</strong>{" "}
+                        {h.proxima_cita
+                          ? h.proxima_cita.split("T")[0]
+                          : "No asignada"}
+                      </p>
+                      <span>
+                        Dr. {h.doctor_nombre} {h.doctor_apellido}
+                      </span>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </Panel>
+          )}
+        </section>
+
+        <section className="doctor-right">
+          <Panel title="Registrar atención">
+            {!citaSeleccionada ? (
+              <div className="empty-state">
+                <h3>Selecciona una cita</h3>
+                <p>
+                  Elige una cita asignada para registrar la atención médica del
+                  paciente.
+                </p>
+              </div>
+            ) : (
+              <>
+                <div className="patient-summary">
+                  <p className="eyebrow">Paciente seleccionado</p>
+                  <h2>
+                    {citaSeleccionada.paciente_nombre}{" "}
+                    {citaSeleccionada.paciente_apellido}
+                  </h2>
+                  <p>
+                    Cita #{citaSeleccionada.id_cita} ·{" "}
+                    {citaSeleccionada.fecha.split("T")[0]} ·{" "}
+                    {citaSeleccionada.hora}
+                  </p>
+                </div>
+
+                <form
+                  onSubmit={registrarDetalleAtencion}
+                  className="modern-form"
+                >
+                  <input
+                    type="text"
+                    name="motivo_consulta"
+                    placeholder="Motivo de consulta"
+                    value={formData.motivo_consulta}
+                    onChange={handleChange}
+                  />
+
+                  <textarea
+                    name="observaciones"
+                    placeholder="Observaciones"
+                    value={formData.observaciones}
+                    onChange={handleChange}
+                  />
+
+                  <textarea
+                    name="receta"
+                    placeholder="Receta / indicaciones"
+                    value={formData.receta}
+                    onChange={handleChange}
+                  />
+
+                  <div>
+                    <label className="field-label">
+                      Próxima cita sugerida
+                    </label>
+                    <input
+                      type="date"
+                      name="proxima_cita"
+                      value={formData.proxima_cita}
+                      onChange={handleChange}
+                    />
+                  </div>
+
+                  <button className="btn-primary" type="submit">
+                    Guardar atención
+                  </button>
+                </form>
+              </>
+            )}
+          </Panel>
+        </section>
+      </div>
+    </>
   );
 }

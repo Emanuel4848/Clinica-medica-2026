@@ -1,5 +1,7 @@
 import { useEffect, useState } from "react";
 import api from "../services/api";
+import PageHeader from "../components/PageHeader";
+import Panel from "../components/Panel";
 
 type Paciente = {
   id_paciente: number;
@@ -51,38 +53,33 @@ export default function PacientesPage({ user }: PacientesPageProps) {
     });
   };
 
+  const limpiarFormulario = () => {
+    setFormData({
+      nombre: "",
+      apellido: "",
+      telefono: "",
+      dpi: "",
+      fecha_nacimiento: "",
+    });
+    setEditandoId(null);
+  };
+
   const handleGuardar = async (e: React.FormEvent) => {
     e.preventDefault();
 
     try {
       if (editandoId) {
-        const response = await api.put(`/pacientes/${editandoId}`, {
-          nombre: formData.nombre,
-          apellido: formData.apellido,
-          telefono: formData.telefono,
-          dpi: formData.dpi,
-          fecha_nacimiento: formData.fecha_nacimiento,
-        });
+        const response = await api.put(`/pacientes/${editandoId}`, formData);
         setMensaje(response.data.message);
-        setEditandoId(null);
       } else {
         const response = await api.post("/pacientes", formData);
         setMensaje(response.data.message);
       }
 
-      setFormData({
-        nombre: "",
-        apellido: "",
-        telefono: "",
-        dpi: "",
-        fecha_nacimiento: "",
-      });
-
+      limpiarFormulario();
       cargarPacientes();
     } catch (error: any) {
-      setMensaje(
-        error.response?.data?.message || "Error al guardar paciente"
-      );
+      setMensaje(error.response?.data?.message || "Error al guardar paciente");
     }
   };
 
@@ -98,9 +95,7 @@ export default function PacientesPage({ user }: PacientesPageProps) {
       setMensaje("Paciente encontrado");
     } catch (error: any) {
       setPacientes([]);
-      setMensaje(
-        error.response?.data?.message || "Error al buscar paciente"
-      );
+      setMensaje(error.response?.data?.message || "Error al buscar paciente");
     }
   };
 
@@ -116,121 +111,135 @@ export default function PacientesPage({ user }: PacientesPageProps) {
     setMensaje("Editando paciente");
   };
 
-  const handleCancelarEdicion = () => {
-    setFormData({
-      nombre: "",
-      apellido: "",
-      telefono: "",
-      dpi: "",
-      fecha_nacimiento: "",
-    });
-    setEditandoId(null);
-    setMensaje("Edición cancelada");
-  };
-
   return (
-    <div className="container">
-      <h1>Módulo de pacientes</h1>
-      <p>
-        Usuario: <strong>{user.username}</strong> | Rol:{" "}
-        <strong>{user.rol}</strong>
-      </p>
+    <>
+      <PageHeader
+        title="Pacientes"
+        subtitle={`Usuario: ${user.username} | Rol: ${user.rol}`}
+      />
 
-      <form onSubmit={handleGuardar} className="form">
-        <input
-          type="text"
-          name="nombre"
-          placeholder="Nombre"
-          value={formData.nombre}
-          onChange={handleChange}
-        />
+      {mensaje && <div className="alert-soft">{mensaje}</div>}
 
-        <input
-          type="text"
-          name="apellido"
-          placeholder="Apellido"
-          value={formData.apellido}
-          onChange={handleChange}
-        />
+      <div className="content-grid">
+        <Panel title={editandoId ? "Actualizar paciente" : "Registrar paciente"}>
+          <form onSubmit={handleGuardar} className="modern-form">
+            <div className="form-grid">
+              <input
+                type="text"
+                name="nombre"
+                placeholder="Nombre"
+                value={formData.nombre}
+                onChange={handleChange}
+              />
 
-        <input
-          type="text"
-          name="telefono"
-          placeholder="Teléfono"
-          value={formData.telefono}
-          onChange={handleChange}
-        />
+              <input
+                type="text"
+                name="apellido"
+                placeholder="Apellido"
+                value={formData.apellido}
+                onChange={handleChange}
+              />
 
-        <input
-          type="text"
-          name="dpi"
-          placeholder="DPI"
-          value={formData.dpi}
-          onChange={handleChange}
-        />
+              <input
+                type="text"
+                name="telefono"
+                placeholder="Teléfono"
+                value={formData.telefono}
+                onChange={handleChange}
+              />
 
-        <input
-          type="date"
-          name="fecha_nacimiento"
-          value={formData.fecha_nacimiento}
-          onChange={handleChange}
-        />
+              <input
+                type="text"
+                name="dpi"
+                placeholder="DPI"
+                value={formData.dpi}
+                onChange={handleChange}
+              />
 
-        <button type="submit">
-          {editandoId ? "Actualizar paciente" : "Registrar paciente"}
-        </button>
+              <input
+                type="date"
+                name="fecha_nacimiento"
+                value={formData.fecha_nacimiento}
+                onChange={handleChange}
+              />
+            </div>
 
-        {editandoId && (
-          <button type="button" onClick={handleCancelarEdicion}>
-            Cancelar edición
-          </button>
-        )}
-      </form>
+            <div className="actions-row">
+              <button className="btn-primary" type="submit">
+                {editandoId ? "Actualizar paciente" : "Registrar paciente"}
+              </button>
 
-      <div className="form">
-        <input
-          type="text"
-          placeholder="Buscar por DPI"
-          value={dpiBusqueda}
-          onChange={(e) => setDpiBusqueda(e.target.value)}
-        />
-        <button onClick={handleBuscar}>Buscar paciente</button>
-        <button onClick={cargarPacientes}>Mostrar todos</button>
+              {editandoId && (
+                <button
+                  className="btn-secondary"
+                  type="button"
+                  onClick={limpiarFormulario}
+                >
+                  Cancelar
+                </button>
+              )}
+            </div>
+          </form>
+        </Panel>
+
+        <Panel title="Buscar paciente">
+          <div className="modern-form">
+            <input
+              type="text"
+              placeholder="Buscar por DPI"
+              value={dpiBusqueda}
+              onChange={(e) => setDpiBusqueda(e.target.value)}
+            />
+
+            <div className="actions-row">
+              <button className="btn-primary" onClick={handleBuscar}>
+                Buscar
+              </button>
+              <button className="btn-secondary" onClick={cargarPacientes}>
+                Mostrar todos
+              </button>
+            </div>
+          </div>
+        </Panel>
       </div>
 
-      {mensaje && <p>{mensaje}</p>}
-
-      <h2>Lista de pacientes</h2>
-      <table>
-        <thead>
-          <tr>
-            <th>ID</th>
-            <th>Nombre</th>
-            <th>Apellido</th>
-            <th>Teléfono</th>
-            <th>DPI</th>
-            <th>Fecha nacimiento</th>
-            <th>Acciones</th>
-          </tr>
-        </thead>
-        <tbody>
-          {pacientes.map((paciente) => (
-            <tr key={paciente.id_paciente}>
-              <td>{paciente.id_paciente}</td>
-              <td>{paciente.nombre}</td>
-              <td>{paciente.apellido}</td>
-              <td>{paciente.telefono}</td>
-              <td>{paciente.dpi}</td>
-              <td>{paciente.fecha_nacimiento.split("T")[0]}</td>
-              <td>
-                <button onClick={() => handleEditar(paciente)}>
-                  Editar
-                </button>
-              </td>
-            </tr>
-          ))}
-        </tbody>
-      </table>
-    </div>
+      <Panel title="Lista de pacientes">
+        <div className="table-wrapper">
+          <table>
+            <thead>
+              <tr>
+                <th>ID</th>
+                <th>Nombre</th>
+                <th>Apellido</th>
+                <th>Teléfono</th>
+                <th>DPI</th>
+                <th>Fecha nacimiento</th>
+                <th>Acciones</th>
+              </tr>
+            </thead>
+            <tbody>
+              {pacientes.map((paciente) => (
+                <tr key={paciente.id_paciente}>
+                  <td>{paciente.id_paciente}</td>
+                  <td>{paciente.nombre}</td>
+                  <td>{paciente.apellido}</td>
+                  <td>{paciente.telefono}</td>
+                  <td>{paciente.dpi}</td>
+                  <td>{paciente.fecha_nacimiento.split("T")[0]}</td>
+                  <td>
+                    <button
+                      className="btn-table"
+                      onClick={() => handleEditar(paciente)}
+                    >
+                      Editar
+                    </button>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      </Panel>
+    </>
   );
 }

@@ -1,6 +1,11 @@
 import { Request, Response } from "express";
 import { pool } from "../config/db";
 
+const esHoraEntera = (hora: string) => {
+  const partes = hora.split(":");
+  return partes[1] === "00";
+};
+
 export const registrarCita = async (req: Request, res: Response) => {
   try {
     const { fecha, hora, id_paciente, id_doctor } = req.body;
@@ -8,6 +13,12 @@ export const registrarCita = async (req: Request, res: Response) => {
     if (!fecha || !hora || !id_paciente || !id_doctor) {
       return res.status(400).json({
         message: "Fecha, hora, paciente y doctor son obligatorios",
+      });
+    }
+
+    if (!esHoraEntera(hora)) {
+      return res.status(400).json({
+        message: "Las citas solo pueden registrarse en horas exactas",
       });
     }
 
@@ -64,6 +75,7 @@ export const registrarCita = async (req: Request, res: Response) => {
     });
   } catch (error) {
     console.error(error);
+
     return res.status(500).json({
       message: "Error al registrar cita",
     });
@@ -86,12 +98,13 @@ export const obtenerCitas = async (_req: Request, res: Response) => {
        FROM cita c
        INNER JOIN paciente p ON c.id_paciente = p.id_paciente
        INNER JOIN doctor d ON c.id_doctor = d.id_doctor
-       ORDER BY c.fecha ASC, c.hora ASC`
+       ORDER BY c.id_cita DESC`
     );
 
     return res.json(result.rows);
   } catch (error) {
     console.error(error);
+
     return res.status(500).json({
       message: "Error al obtener citas",
     });
@@ -127,6 +140,7 @@ export const cancelarCita = async (req: Request, res: Response) => {
     });
   } catch (error) {
     console.error(error);
+
     return res.status(500).json({
       message: "Error al cancelar cita",
     });
@@ -141,6 +155,12 @@ export const reprogramarCita = async (req: Request, res: Response) => {
     if (!fecha || !hora) {
       return res.status(400).json({
         message: "Fecha y hora son obligatorias",
+      });
+    }
+
+    if (!esHoraEntera(hora)) {
+      return res.status(400).json({
+        message: "Las citas solo pueden reprogramarse en horas exactas",
       });
     }
 
@@ -159,7 +179,10 @@ export const reprogramarCita = async (req: Request, res: Response) => {
 
     const citaDuplicada = await pool.query(
       `SELECT * FROM cita
-       WHERE id_doctor = $1 AND fecha = $2 AND hora = $3 AND id_cita <> $4`,
+       WHERE id_doctor = $1 
+       AND fecha = $2 
+       AND hora = $3 
+       AND id_cita <> $4`,
       [id_doctor, fecha, hora, id]
     );
 
@@ -185,39 +208,50 @@ export const reprogramarCita = async (req: Request, res: Response) => {
     });
   } catch (error) {
     console.error(error);
+
     return res.status(500).json({
       message: "Error al reprogramar cita",
     });
   }
 };
 
-export const obtenerCitasPorDoctor = async (req: Request, res: Response) => {
+export const obtenerCitasPorDoctor = async (
+  req: Request,
+  res: Response
+) => {
   try {
     const { id_usuario } = req.params;
 
     const result = await pool.query(
-      `SELECT c.*, 
-              p.nombre AS paciente_nombre, p.apellido AS paciente_apellido,
-              d.nombre AS doctor_nombre, d.apellido AS doctor_apellido,
-              d.especialidad
+      `SELECT 
+          c.*, 
+          p.nombre AS paciente_nombre, 
+          p.apellido AS paciente_apellido,
+          d.nombre AS doctor_nombre, 
+          d.apellido AS doctor_apellido,
+          d.especialidad
        FROM cita c
-       JOIN paciente p ON c.id_paciente = p.id_paciente
-       JOIN doctor d ON c.id_doctor = d.id_doctor
+       INNER JOIN paciente p ON c.id_paciente = p.id_paciente
+       INNER JOIN doctor d ON c.id_doctor = d.id_doctor
        WHERE d.id_usuario = $1
-       ORDER BY c.fecha ASC, c.hora ASC`,
+       ORDER BY c.id_cita DESC`,
       [id_usuario]
     );
 
     return res.json(result.rows);
   } catch (error) {
     console.error(error);
+
     return res.status(500).json({
       message: "Error al obtener citas del doctor",
     });
   }
 };
 
-export const marcarComoAtendida = async (req: Request, res: Response) => {
+export const marcarComoAtendida = async (
+  req: Request,
+  res: Response
+) => {
   try {
     const { id } = req.params;
 
@@ -246,6 +280,7 @@ export const marcarComoAtendida = async (req: Request, res: Response) => {
     });
   } catch (error) {
     console.error(error);
+
     return res.status(500).json({
       message: "Error al actualizar estado",
     });
